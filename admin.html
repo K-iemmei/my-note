@@ -4,7 +4,6 @@
   <title>Admin VSCode CMS Level 2</title>
 
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     body { margin: 0; font-family: Arial; }
@@ -77,23 +76,22 @@
 
 </div>
 
-<script>
-  
-const SUPABASE_URL = "https://lmqukgeyfmxprgkrujff.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtcXVrZ2V5Zm14cHJna3J1amZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMzQ5NTMsImV4cCI6MjA5ODgxMDk1M30.mz7NTaWXqcokWnuYb2k65dWmgvywpFpemnJcsO3UFk0";
+<script type="module">
 
-window._supabaseClient =
-  window._supabaseClient ||
-  supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
-
-const supabaseClient = window._supabaseClient;
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 /* =====================
    CONFIG
 ===================== */
+const SUPABASE_URL = "https://lmqukgeyfmxprgkrujff.supabase.co";
+
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtcXVrZ2V5Zm14cHJna3J1amZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMzQ5NTMsImV4cCI6MjA5ODgxMDk1M30.mz7NTaWXqcokWnuYb2k65dWmgvywpFpemnJcsO3UFk0";
+
+const supabase = createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
 const PASSWORD = "1234";
 
 /* =====================
@@ -106,22 +104,23 @@ let currentFileId = null;
 /* =====================
    LOGIN
 ===================== */
-function login(){
+window.login = function () {
+
   const pw = document.getElementById("pw").value;
 
-  if(pw === PASSWORD){
+  if (pw === PASSWORD) {
     document.getElementById("loginBox").style.display = "none";
     document.getElementById("editorApp").style.display = "flex";
     initEditor();
   } else {
     alert("Wrong password");
   }
-}
+};
 
 /* =====================
    INIT EDITOR
 ===================== */
-function initEditor(){
+function initEditor() {
 
   require.config({
     paths: {
@@ -146,16 +145,19 @@ function initEditor(){
 /* =====================
    LOAD FILES
 ===================== */
-async function loadFiles(){
+async function loadFiles() {
 
-  const res = await fetch(SUPABASE_URL + "/rest/v1/files", {
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: "Bearer " + SUPABASE_KEY
-    }
-  });
+  const { data, error } = await supabase
+    .from("files")
+    .select("*")
+    .order("id");
 
-  files = await res.json();
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  files = data;
   renderExplorer();
 
 }
@@ -163,17 +165,19 @@ async function loadFiles(){
 /* =====================
    RENDER EXPLORER
 ===================== */
-function renderExplorer(){
+function renderExplorer() {
 
   const box = document.getElementById("explorer");
   box.innerHTML = "<h3>FILES</h3>";
 
   files.forEach(f => {
-    box.innerHTML += `
-      <div onclick="openFile(${f.id})">
-        📄 ${f.name}
-      </div>
-    `;
+
+    const div = document.createElement("div");
+    div.innerHTML = "📄 " + f.name;
+    div.onclick = () => openFile(f.id);
+
+    box.appendChild(div);
+
   });
 
 }
@@ -181,9 +185,10 @@ function renderExplorer(){
 /* =====================
    OPEN FILE
 ===================== */
-function openFile(id){
+function openFile(id) {
 
   const file = files.find(f => f.id === id);
+
   currentFileId = id;
 
   editor.setValue(file.content);
@@ -193,37 +198,40 @@ function openFile(id){
 /* =====================
    SAVE FILE
 ===================== */
-async function save(){
+window.save = async function () {
 
   const content = editor.getValue();
 
-  const res = await fetch(
-    SUPABASE_URL + "/rest/v1/files?id=eq." + currentFileId,
-    {
-      method: "PATCH",
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: "Bearer " + SUPABASE_KEY,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        content: content
-      })
-    }
-  );
+  const { error } = await supabase
+    .from("files")
+    .update({
+      content: content
+    })
+    .eq("id", currentFileId);
+
+  if (error) {
+    console.error(error);
+    document.getElementById("status").innerText = "Save failed";
+    return;
+  }
+
+  const file = files.find(f => f.id === currentFileId);
+  if (file) file.content = content;
 
   document.getElementById("status").innerText = "Saved ✔";
 
-}
+};
 
 /* =====================
    CTRL + S
 ===================== */
-document.addEventListener("keydown", function(e){
-  if(e.ctrlKey && e.key === "s"){
+document.addEventListener("keydown", function (e) {
+
+  if (e.ctrlKey && e.key === "s") {
     e.preventDefault();
     save();
   }
+
 });
 
 </script>

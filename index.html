@@ -21,10 +21,14 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 /* =====================
    INIT SUPABASE (ĐÚNG)
 ===================== */
-const supabase = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+window._supabaseClient =
+  window._supabaseClient ||
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+const supabase = window._supabaseClient;
 
 /* =====================
    LOAD INITIAL DATA

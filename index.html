@@ -2,76 +2,70 @@
 <html>
 <head>
   <title>Home</title>
-
-  <!-- Supabase JS -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
 <h1 id="content">Loading...</h1>
 
-<script>
+<script type="module">
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 /* =====================
    CONFIG
 ===================== */
 const SUPABASE_URL = "https://lmqukgeyfmxprgkrujff.supabase.co";
+
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtcXVrZ2V5Zm14cHJna3J1amZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMzQ5NTMsImV4cCI6MjA5ODgxMDk1M30.mz7NTaWXqcokWnuYb2k65dWmgvywpFpemnJcsO3UFk0";
 
 /* =====================
-   INIT SUPABASE (ĐÚNG)
+   INIT SUPABASE
 ===================== */
-window._supabaseClient =
-  window._supabaseClient ||
-  window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
-
-const supabaseClient = window._supabaseClient;
+const supabase = createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
 /* =====================
    LOAD INITIAL DATA
 ===================== */
-async function load(){
-
-  const { data, error } = await supabaseClient
-    .from('files')
-    .select('*')
-    .eq('id', 1)
+async function load() {
+  const { data, error } = await supabase
+    .from("files")
+    .select("*")
+    .eq("id", 1)
     .single();
 
-  if(error){
-    console.log("LOAD ERROR:", error);
+  if (error) {
+    console.error("LOAD ERROR:", error);
     return;
   }
 
   document.getElementById("content").innerHTML = data.content;
 }
 
-load();
+await load();
 
 /* =====================
    REALTIME LISTENER
 ===================== */
-supabaseClient
-  .channel('files-channel')
+supabase
+  .channel("files-channel")
   .on(
-    'postgres_changes',
+    "postgres_changes",
     {
-      event: '*',
-      schema: 'public',
-      table: 'files'
+      event: "*",
+      schema: "public",
+      table: "files"
     },
     (payload) => {
-
       console.log("CHANGE DETECTED:", payload);
 
-      if(payload.new && payload.new.id === 1){
+      if (payload.new?.id === 1) {
         document.getElementById("content").innerHTML =
           payload.new.content;
       }
-
     }
   )
   .subscribe();

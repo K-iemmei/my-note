@@ -309,11 +309,11 @@ function convertNotebookToHTML(notebook){
             content: html
         });
 
-    if(error){
-        console.log(error);
-        alert("Upload failed");
-        return;
-    }
+   if(error){
+    console.log("SUPABASE ERROR:", error);
+    alert(JSON.stringify(error, null, 2));
+    return;
+}
 
     alert("Published ✔");
 }

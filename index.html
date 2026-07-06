@@ -1,12 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Home</title>
+  <meta charset="UTF-8">
+  <title>My Blog</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      margin: 40px;
+    }
+
+    #posts div {
+      cursor: pointer;
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+    }
+
+    #posts div:hover {
+      background: #f5f5f5;
+    }
+
+    #article {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 2px solid #ddd;
+    }
+
+    pre {
+      background: #111;
+      color: #0f0;
+      padding: 10px;
+      overflow-x: auto;
+    }
+  </style>
 </head>
 
 <body>
 
-<h1 id="content">Loading...</h1>
+<h1>My Blog</h1>
+
+<div id="posts">Loading...</div>
+
+<div id="article"></div>
 
 <script type="module">
 
@@ -16,59 +51,62 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
    CONFIG
 ===================== */
 const SUPABASE_URL = "https://lmqukgeyfmxprgkrujff.supabase.co";
-
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtcXVrZ2V5Zm14cHJna3J1amZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMzQ5NTMsImV4cCI6MjA5ODgxMDk1M30.mz7NTaWXqcokWnuYb2k65dWmgvywpFpemnJcsO3UFk0";
 
 /* =====================
    INIT SUPABASE
 ===================== */
-const supabase = createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /* =====================
-   LOAD INITIAL DATA
+   LOAD POSTS
 ===================== */
-async function load() {
+async function loadPosts() {
+
   const { data, error } = await supabase
-    .from("files")
+    .from("posts")
     .select("*")
-    .eq("id", 1)
-    .single();
+    .order("id", { ascending: false });
 
   if (error) {
     console.error("LOAD ERROR:", error);
+    document.getElementById("posts").innerText = "Error loading posts";
     return;
   }
 
-  document.getElementById("content").innerHTML = data.content;
+  const box = document.getElementById("posts");
+  box.innerHTML = "";
+
+  data.forEach(post => {
+
+    const div = document.createElement("div");
+
+    div.innerHTML = `<h3>${post.title}</h3>`;
+
+    div.onclick = () => openPost(post);
+
+    box.appendChild(div);
+
+  });
+
 }
 
-await load();
+/* =====================
+   OPEN POST
+===================== */
+function openPost(post) {
+
+  document.getElementById("article").innerHTML = `
+    <h1>${post.title}</h1>
+    <div>${post.content}</div>
+  `;
+
+}
 
 /* =====================
-   REALTIME LISTENER
+   INIT
 ===================== */
-supabase
-  .channel("files-channel")
-  .on(
-    "postgres_changes",
-    {
-      event: "*",
-      schema: "public",
-      table: "files"
-    },
-    (payload) => {
-      console.log("CHANGE DETECTED:", payload);
-
-      if (payload.new?.id === 1) {
-        document.getElementById("content").innerHTML =
-          payload.new.content;
-      }
-    }
-  )
-  .subscribe();
+loadPosts();
 
 </script>
 

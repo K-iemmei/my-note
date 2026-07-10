@@ -76,6 +76,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { marked } from "https://esm.sh/marked@12";
+import katex from "https://esm.sh/katex@0.16.9";
 
 const SUPABASE_URL = "https://lmqukgeyfmxprgkrujff.supabase.co";
 
@@ -257,6 +258,7 @@ function escapeHtml(str){
 // CSS scoped, tự chứa trong nội dung post (vì content sẽ được
 // nhúng vào nơi khác nên không thể phụ thuộc CSS ngoài trang admin)
 const NOTEBOOK_CSS = `
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <style>
 .nb-wrap{
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
@@ -266,17 +268,28 @@ const NOTEBOOK_CSS = `
   max-width: 900px;
   margin: 0 auto;
 }
-.nb-wrap h1, .nb-wrap h2, .nb-wrap h3, .nb-wrap h4 {
-  font-weight: 600;
-  line-height: 1.25;
-  margin-top: 24px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid #d1d9e0;
+.nb-wrap h1, .nb-wrap h2, .nb-wrap h3, .nb-wrap h4, .nb-wrap h5, .nb-wrap h6 {
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  margin-top: 24px !important;
+  margin-bottom: 16px !important;
   padding-bottom: .3em;
+  display: block;
 }
-.nb-wrap h1 { font-size: 2em; }
-.nb-wrap h2 { font-size: 1.5em; }
-.nb-wrap h3 { font-size: 1.25em; border-bottom: none; }
+.nb-wrap h1, .nb-wrap h2 {
+  border-bottom: 1px solid #d1d9e0;
+}
+.nb-wrap h1 { font-size: 2em !important; }
+.nb-wrap h2 { font-size: 1.5em !important; }
+.nb-wrap h3 { font-size: 1.25em !important; border-bottom: none; }
+.nb-wrap h4 { font-size: 1em !important; }
+.nb-wrap h5 { font-size: .875em !important; }
+.nb-wrap h6 { font-size: .85em !important; color: #59636e; }
+.nb-wrap .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px 0;
+}
 .nb-wrap p { margin: 0 0 16px 0; }
 .nb-wrap a { color: #0969da; text-decoration: none; }
 .nb-wrap a:hover { text-decoration: underline; }
@@ -343,6 +356,93 @@ const NOTEBOOK_CSS = `
 </style>
 `;
 
+/* ==========================
+   LaTeX rendering (KaTeX)
+   Tách công thức ra khỏi source
+   bằng placeholder trước khi cho
+   marked xử lý, sau đó chèn lại
+   HTML KaTeX đã render.
+========================== */
+
+function renderMathToPlaceholders(source){
+
+    const store = [];
+
+    function stash(renderFn){
+        const token = `@@MATH_${store.length}@@`;
+        store.push(renderFn);
+        return token;
+    }
+
+    // $$...$$ (display, có thể nhiều dòng)
+    let out = source.replace(/\$\$([\s\S]+?)\$\$/g, (match, expr)=>{
+        return stash(()=>{
+            try{
+                return katex.renderToString(expr.trim(), { displayMode:true, throwOnError:false });
+            }catch(e){
+                return `<pre>${escapeHtml(match)}</pre>`;
+            }
+        });
+    });
+
+    // \[ ... \] (display, cú pháp thay thế)
+    out = out.replace(/\\\[([\s\S]+?)\\\]/g, (match, expr)=>{
+        return stash(()=>{
+            try{
+                return katex.renderToString(expr.trim(), { displayMode:true, throwOnError:false });
+            }catch(e){
+                return `<pre>${escapeHtml(match)}</pre>`;
+            }
+        });
+    });
+
+    // $...$ (inline, không chứa xuống dòng, không dính sát chữ số $ tiền tệ kiểu $5)
+    out = out.replace(/(?<!\$)\$(?!\$)([^\n$]+?)\$(?!\$)/g, (match, expr)=>{
+        return stash(()=>{
+            try{
+                return katex.renderToString(expr.trim(), { displayMode:false, throwOnError:false });
+            }catch(e){
+                return `<code>${escapeHtml(match)}</code>`;
+            }
+        });
+    });
+
+    // \( ... \) (inline, cú pháp thay thế)
+    out = out.replace(/\\\(([\s\S]+?)\\\)/g, (match, expr)=>{
+        return stash(()=>{
+            try{
+                return katex.renderToString(expr.trim(), { displayMode:false, throwOnError:false });
+            }catch(e){
+                return `<code>${escapeHtml(match)}</code>`;
+            }
+        });
+    });
+
+    return { text: out, store };
+
+}
+
+function restoreMath(html, store){
+
+    return html.replace(/@@MATH_(\d+)@@/g, (match, idx)=>{
+        const renderFn = store[Number(idx)];
+        return renderFn ? renderFn() : match;
+    });
+
+}
+
+function renderMarkdownWithMath(source){
+
+    const { text, store } = renderMathToPlaceholders(source);
+
+    let html = marked.parse(text);
+
+    html = restoreMath(html, store);
+
+    return html;
+
+}
+
 function renderOutputs(outputs){
 
     if(!outputs || outputs.length === 0) return "";
@@ -392,7 +492,7 @@ function convertNotebookToHTML(notebook){
         const source = Array.isArray(cell.source) ? cell.source.join("") : (cell.source || "");
 
         if(cell.cell_type === "markdown"){
-            body += `<div class="nb-cell nb-markdown">${marked.parse(source)}</div>`;
+            body += `<div class="nb-cell nb-markdown">${renderMarkdownWithMath(source)}</div>`;
         }
 
         if(cell.cell_type === "code"){

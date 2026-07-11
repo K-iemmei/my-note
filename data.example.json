@@ -8,12 +8,9 @@
   },
 
   "navigation": [
-    { "label": "Home", "href": "#" },
-    { "label": "Projects", "href": "#projects" },
-    { "label": "Experience", "href": "#experience" },
-    { "label": "Skills", "href": "#skills" },
-    { "label": "Blog", "href": "blog.html" },
-    { "label": "Contact", "href": "#contact" }
+    { "label": "Home", "href": "index.html" },
+    { "label": "Note", "href": "note.html" },
+    { "label": "Blog", "href": "blog.html" }
   ],
 
   "sections": [

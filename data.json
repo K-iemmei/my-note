@@ -7,10 +7,9 @@
     "bio": "Viết thêm thông tin chi tiết về bạn ở đây..."
   },
   "navigation": [
-    { "label": "Home", "href": "#" },
-    { "label": "Blog", "href": "#blog" },
-    { "label": "Projects", "href": "#projects" },
-    { "label": "Contact", "href": "#contact" }
+    { "label": "Home", "href": "index.html" },
+    { "label": "Note", "href": "note.html" },
+    { "label": "Blog", "href": "blog.html" }
   ],
   "sections": [
     {

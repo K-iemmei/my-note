@@ -4,8 +4,11 @@
 
 ```
 my-note/
-├── portfolio.html      (File HTML chính - không cần sửa)
-├── data.json          (File DATA - điều này là nơi bạn thay đổi nội dung!)
+├── index.html          (Trang chính - trang Home)
+├── blog.html          (Trang Blog)
+├── note.html          (Trang Note)
+├── portfolio.html     (Backup - có thể xóa)
+├── data.json          (File DATA - nơi bạn thay đổi nội dung)
 ├── assets/
 │   └── profile.jpeg   (Ảnh đại diện)
 └── README.md
@@ -13,10 +16,16 @@ my-note/
 
 ## 🚀 Cách dùng
 
-### Bước 1: Mở file `data.json`
-File này chứa TẤT CẢ nội dung của trang. HTML sẽ tự động đọc và hiển thị.
+### Bước 1: Mở trình duyệt vào `index.html`
+Đây là trang chính của bạn - hiển thị thông tin profile và sections.
 
-### Bước 2: Chỉnh sửa thông tin cơ bản
+### Bước 2: Chỉnh sửa file `data.json`
+File này chứa TẤT CẢ nội dung của trang Home. HTML sẽ tự động đọc và hiển thị.
+
+### Bước 3: Tùy chỉnh trang Blog & Note
+- `blog.html` - Dành cho các bài blog
+- `note.html` - Dành cho các note ghi chép
+- Cả hai trang đều tự động load navigation từ `data.json`
 
 ```json
 {
@@ -39,24 +48,23 @@ File này chứa TẤT CẢ nội dung của trang. HTML sẽ tự động đọ
 
 ```json
 "navigation": [
-  { "label": "Home", "href": "#" },
-  { "label": "Blog", "href": "#blog" },
-  { "label": "Projects", "href": "#projects" },
-  { "label": "Contact", "href": "#contact" }
+  { "label": "Home", "href": "index.html" },
+  { "label": "Note", "href": "note.html" },
+  { "label": "Blog", "href": "blog.html" }
 ]
 ```
 
 **Cách thêm menu:**
 - Thêm object mới vào mảng
 - `label`: Tên hiển thị
-- `href`: Link đến trang/phần
+- `href`: Link đến file hoặc URL
 
 **Ví dụ:**
 ```json
 "navigation": [
-  { "label": "Home", "href": "#" },
-  { "label": "Skills", "href": "#skills" },  // ← Thêm như này
-  { "label": "Blog", "href": "#blog" }
+  { "label": "Home", "href": "index.html" },
+  { "label": "Portfolio", "href": "portfolio.html" },  // ← Thêm như này
+  { "label": "Blog", "href": "blog.html" }
 ]
 ```
 
@@ -136,27 +144,20 @@ Thêm object này vào mảng `sections`:
 }
 ```
 
-### Ví dụ 2: Thêm section "Education"
+### Ví dụ 2: Sửa navigation
 
 ```json
-{
-  "id": "education",
-  "title": "Education",
-  "items": [
-    {
-      "company": "Stanford University",
-      "role": "Bachelor of Science in Computer Science",
-      "period": "2015 - 2019",
-      "description": "Specialized in AI and Machine Learning"
-    },
-    {
-      "company": "MIT",
-      "role": "Master of Science in AI",
-      "period": "2019 - 2021",
-      "description": "Focus on Deep Learning and NLP"
-    }
-  ]
-}
+"navigation": [
+  { "label": "Home", "href": "#" },
+  { "label": "Note", "href": "note.html" },
+  { "label": "Blog", "href": "blog.html" }
+]
+```
+
+Bạn có thể thay đổi `label` hoặc thêm menu mới. Để thêm menu tiếp theo:
+
+```json
+{ "label": "Portfolio", "href": "portfolio.html" }
 ```
 
 ### Ví dụ 3: Thêm project mới
@@ -171,8 +172,6 @@ Thêm object vào mảng `items` trong section `projects`:
   "tags": ["Vue.js", "Firebase", "PWA"]
 }
 ```
-
----
 
 ## 🔗 Social Links
 
@@ -226,9 +225,8 @@ Tìm dòng này:
 - [ ] Sửa `profile.description`
 - [ ] Sửa `profileBio`
 - [ ] Sửa social links (GitHub, email, etc.)
-- [ ] Thêm dự án của bạn vào section `projects`
-- [ ] Sửa navigation nếu cần
-- [ ] Thêm ảnh đại diện vào thư mục `assets`
+- [ ] Thêm sections content vào mảng `sections`
+- [ ] Sửa ảnh đại diện - thay file tại `assets/profile.jpeg`
 
 ---
 
@@ -245,9 +243,8 @@ Tìm dòng này:
   },
   "navigation": [
     { "label": "Home", "href": "#" },
-    { "label": "Blog", "href": "#blog" },
-    { "label": "Projects", "href": "#projects" },
-    { "label": "Contact", "href": "#contact" }
+    { "label": "Note", "href": "note.html" },
+    { "label": "Blog", "href": "blog.html" }
   ],
   "sections": [
     {
@@ -264,24 +261,6 @@ Tìm dòng này:
           "role": "Senior Developer",
           "period": "2022 - Now",
           "description": "Lãnh đạo team phát triển các ứng dụng web"
-        },
-        {
-          "company": "Startup B",
-          "role": "Developer",
-          "period": "2020 - 2022",
-          "description": "Phát triển full stack sử dụng React và Node.js"
-        }
-      ]
-    },
-    {
-      "id": "projects",
-      "title": "Projects",
-      "items": [
-        {
-          "name": "Project 1",
-          "description": "Mô tả dự án",
-          "link": "https://github.com",
-          "tags": ["React", "Node.js"]
         }
       ]
     }
@@ -299,22 +278,25 @@ Tìm dòng này:
 
 ## 🎯 Tips & Tricks
 
-### 1. Thay đổi thứ tự sections
+### 1. Thay đổi menu
+Sửa mảng `navigation` trong `data.json` để thêm/xóa/đổi menu
+
+### 2. Thay đổi thứ tự sections
 Chỉ cần di chuyển object trong mảng `sections`
 
-### 2. Ẩn một section
+### 3. Ẩn một section
 Xóa hoặc comment lại object đó
 
-### 3. Thêm section mới
+### 4. Thêm section mới
 Thêm một object mới vào mảng `sections`
 
-### 4. Định dạng JSON đúng
+### 5. Định dạng JSON đúng
 - Các string phải trong `""`
 - Các object phải trong `{}`
 - Các mảng phải trong `[]`
 - Không được dùng dấu phẩy sau phần tử cuối cùng
 
-### 5. Kiểm tra JSON
+### 6. Kiểm tra JSON
 Dán `data.json` vào https://jsonlint.com/ để kiểm tra cú pháp
 
 ---

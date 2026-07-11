@@ -8,7 +8,6 @@
   },
 
   "navigation": [
-    { "label": "Home", "href": "index.html" },
     { "label": "Note", "href": "note.html" },
     { "label": "Blog", "href": "blog.html" }
   ],

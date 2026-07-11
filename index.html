@@ -332,7 +332,7 @@
     // Render Navigation
     function renderNavbar(name, navItems) {
       const navbar = document.getElementById('navbar');
-      navbar.innerHTML = `<h1>${name}</h1>`;
+      navbar.innerHTML = `<h1><a href="index.html" style="text-decoration: none; color: inherit; cursor: pointer;">${name}</a></h1>`;
       
       navItems.forEach(item => {
         const link = document.createElement('a');
@@ -424,69 +424,5 @@
     // Load and render on page load
     loadData();
   </script>
-</body>
-</html>
-   CONFIG
-===================== */
-const SUPABASE_URL = "https://lmqukgeyfmxprgkrujff.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtcXVrZ2V5Zm14cHJna3J1amZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMzQ5NTMsImV4cCI6MjA5ODgxMDk1M30.mz7NTaWXqcokWnuYb2k65dWmgvywpFpemnJcsO3UFk0";
-
-/* =====================
-   INIT SUPABASE
-===================== */
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-/* =====================
-   LOAD POSTS
-===================== */
-async function loadPosts() {
-
-  const { data, error } = await supabase
-    .from("posts")
-    .select("*")
-    .order("id", { ascending: false });
-
-  if (error) {
-    console.error("LOAD ERROR:", error);
-    document.getElementById("posts").innerText = "Error loading posts";
-    return;
-  }
-
-  const box = document.getElementById("posts");
-  box.innerHTML = "";
-
-  data.forEach(post => {
-
-    const div = document.createElement("div");
-
-    div.innerHTML = `<h3>${post.title}</h3>`;
-
-    div.onclick = () => openPost(post);
-
-    box.appendChild(div);
-
-  });
-
-}
-
-/* =====================
-   OPEN POST
-===================== */
-function openPost(post) {
-
-  document.getElementById("article").innerHTML = `
-    <h1>${post.title}</h1>
-    <div>${post.content}</div>
-  `;
-
-}
-
-/* =====================
-   INIT
-===================== */
-loadPosts();
-
-</script>
-
 </body>
 </html>

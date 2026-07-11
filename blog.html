@@ -230,7 +230,7 @@
     // Render Navigation
     function renderNavbar(name, navItems) {
       const navbar = document.getElementById('navbar');
-      navbar.innerHTML = `<h1>${name}</h1>`;
+      navbar.innerHTML = `<h1><a href="index.html" style="text-decoration: none; color: inherit; cursor: pointer;">${name}</a></h1>`;
       
       navItems.forEach(item => {
         const link = document.createElement('a');
